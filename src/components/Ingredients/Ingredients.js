@@ -2,10 +2,13 @@ import React, { useCallback, useState } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
+import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
+  const [isLoading, setIsloading] = useState(false);
+  const [error, setError] = useState();
 
   console.log(userIngredients);
 
@@ -16,6 +19,7 @@ function Ingredients() {
   }, []);
 
   const addIngredientsHandler = (ingredient) => {
+    setIsloading(true);
     fetch(
       'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json',
       {
@@ -26,30 +30,52 @@ function Ingredients() {
         },
       }
     )
-      .then((res) => res.json())
+      .then((res) => {
+        res.json();
+        setIsloading(false);
+      })
       .then((data) => {
         setUserIngredients((prevState) => {
-          return [...prevState, { id: data.title, ...ingredient }];
+          return [...prevState, { ...ingredient }];
         });
+      })
+      .catch((err) => {
+        setError('Something went wrong!');
+        setIsloading(false);
       });
   };
 
   const removeIngredientsHandler = (id) => {
+    setIsloading(true);
     fetch(
       `https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${id}.json`,
       {
         method: 'DELETE',
       }
-    ).then((response) => {
-      setUserIngredients(
-        userIngredients.filter((ingredient) => ingredient.id !== id)
-      );
-    });
+    )
+      .then((response) => {
+        setIsloading(false);
+        setUserIngredients(
+          userIngredients.filter((ingredient) => ingredient.id !== id)
+        );
+      })
+      .catch((err) => {
+        setError('Something went wrong!');
+        setIsloading(false);
+      });
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return (
     <div className="App">
-      <IngredientForm onAddIngredients={addIngredientsHandler} />
+      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+      <IngredientForm
+        onAddIngredients={addIngredientsHandler}
+        isLoading={isLoading}
+      />
 
       <section>
         <Search onLoadIngredients={onFilteredIngredientsHandler} />
