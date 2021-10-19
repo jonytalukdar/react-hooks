@@ -10,11 +10,7 @@ const IngredientForm = React.memo((props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-
-    props.onAddIngredients({
-      title: enteredTitle,
-      amount: enteredAmount,
-    });
+    props.onAddIngredient({ title: enteredTitle, amount: enteredAmount });
   };
 
   return (
@@ -27,22 +23,25 @@ const IngredientForm = React.memo((props) => {
               type="text"
               id="title"
               value={enteredTitle}
-              onChange={(e) => setEnteredTitle(e.target.value)}
+              onChange={(event) => {
+                setEnteredTitle(event.target.value);
+              }}
             />
           </div>
           <div className="form-control">
             <label htmlFor="amount">Amount</label>
-
             <input
               type="number"
               id="amount"
               value={enteredAmount}
-              onChange={(e) => setEnteredAmount(e.target.value)}
+              onChange={(event) => {
+                setEnteredAmount(event.target.value);
+              }}
             />
           </div>
           <div className="ingredient-form__actions">
             <button type="submit">Add Ingredient</button>
-            {props.isLoading && <LoadingIndicator />}
+            {props.loading && <LoadingIndicator />}
           </div>
         </form>
       </Card>

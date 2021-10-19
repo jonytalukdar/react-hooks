@@ -1,44 +1,40 @@
-import React, { useEffect, useRef } from 'react';
-import { useState } from 'react/cjs/react.development';
+import React, { useState, useEffect, useRef } from 'react';
 
 import Card from '../UI/Card';
 import './Search.css';
 
-const Search = React.memo(({ onLoadIngredients }) => {
+const Search = React.memo((props) => {
+  const { onLoadIngredients } = props;
   const [enteredFilter, setEnteredFilter] = useState('');
   const inputRef = useRef();
 
   useEffect(() => {
-    const clear = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (enteredFilter === inputRef.current.value) {
         const query =
           enteredFilter.length === 0
             ? ''
             : `?orderBy="title"&equalTo="${enteredFilter}"`;
-
         fetch(
           'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json' +
             query
         )
           .then((response) => response.json())
-          .then((data) => {
-            const loadedData = [];
-
-            for (const key in data) {
-              const newIngredients = {
+          .then((responseData) => {
+            const loadedIngredients = [];
+            for (const key in responseData) {
+              loadedIngredients.push({
                 id: key,
-                ...data[key],
-              };
-              loadedData.push(newIngredients);
+                title: responseData[key].title,
+                amount: responseData[key].amount,
+              });
             }
-
-            onLoadIngredients(loadedData);
+            onLoadIngredients(loadedIngredients);
           });
       }
     }, 500);
-
     return () => {
-      clearTimeout(clear);
+      clearTimeout(timer);
     };
   }, [enteredFilter, onLoadIngredients, inputRef]);
 
@@ -48,10 +44,10 @@ const Search = React.memo(({ onLoadIngredients }) => {
         <div className="search-input">
           <label>Filter by Title</label>
           <input
-            type="text"
             ref={inputRef}
+            type="text"
             value={enteredFilter}
-            onChange={(e) => setEnteredFilter(e.target.value)}
+            onChange={(event) => setEnteredFilter(event.target.value)}
           />
         </div>
       </Card>
