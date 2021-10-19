@@ -35,9 +35,16 @@ function Ingredients() {
   };
 
   const removeIngredientsHandler = (id) => {
-    setUserIngredients(
-      userIngredients.filter((ingredient) => ingredient.id !== id)
-    );
+    fetch(
+      `https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${id}.json`,
+      {
+        method: 'DELETE',
+      }
+    ).then((response) => {
+      setUserIngredients(
+        userIngredients.filter((ingredient) => ingredient.id !== id)
+      );
+    });
   };
 
   return (
