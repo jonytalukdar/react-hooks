@@ -30,6 +30,12 @@ function Ingredients() {
       });
   }, []);
 
+  // filter ingredients
+
+  const onFilteredIngredientsHandler = (filterdIngredients) => {
+    setUserIngredients(filterdIngredients);
+  };
+
   const addIngredientsHandler = (ingredient) => {
     fetch(
       'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json',
@@ -60,7 +66,7 @@ function Ingredients() {
       <IngredientForm onAddIngredients={addIngredientsHandler} />
 
       <section>
-        <Search />
+        <Search onLoadIngredients={onFilteredIngredientsHandler} />
         <IngredientList
           ingredients={userIngredients}
           onRemoveIngredients={removeIngredientsHandler}
