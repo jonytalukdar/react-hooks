@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { useState } from 'react/cjs/react.development';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -10,31 +9,11 @@ function Ingredients() {
 
   console.log(userIngredients);
 
-  useEffect(() => {
-    fetch(
-      'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json'
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        const loadedData = [];
-
-        for (const key in data) {
-          const newIngredients = {
-            id: key,
-            ...data[key],
-          };
-          loadedData.push(newIngredients);
-        }
-
-        setUserIngredients(loadedData);
-      });
-  }, []);
-
   // filter ingredients
 
-  const onFilteredIngredientsHandler = (filterdIngredients) => {
+  const onFilteredIngredientsHandler = useCallback((filterdIngredients) => {
     setUserIngredients(filterdIngredients);
-  };
+  }, []);
 
   const addIngredientsHandler = (ingredient) => {
     fetch(
