@@ -9,9 +9,22 @@ function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
 
   const addIngredientsHandler = (ingredient) => {
-    setUserIngredients((prevState) => {
-      return [...prevState, ingredient];
-    });
+    fetch(
+      'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json',
+      {
+        method: 'POST',
+        body: JSON.stringify(ingredient),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setUserIngredients((prevState) => {
+          return [...prevState, { id: data.title, ...ingredient }];
+        });
+      });
   };
 
   const removeIngredientsHandler = (id) => {
