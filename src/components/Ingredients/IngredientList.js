@@ -7,9 +7,9 @@ const IngredientList = (props) => {
     <section className="ingredient-list">
       <h2>Loaded Ingredients</h2>
       <ul>
-        {props.ingredients.map((ingredient, index) => (
+        {props.ingredients.map((ingredient) => (
           <li
-            key={index}
+            key={ingredient.id}
             onClick={() => props.onRemoveIngredients(ingredient.id)}
           >
             <span>{ingredient.title}</span>

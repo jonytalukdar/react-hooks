@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react/cjs/react.development';
 
 import IngredientForm from './IngredientForm';
@@ -7,6 +7,28 @@ import Search from './Search';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
+
+  console.log(userIngredients);
+
+  useEffect(() => {
+    fetch(
+      'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json'
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        const loadedData = [];
+
+        for (const key in data) {
+          const newIngredients = {
+            id: key,
+            ...data[key],
+          };
+          loadedData.push(newIngredients);
+        }
+
+        setUserIngredients(loadedData);
+      });
+  }, []);
 
   const addIngredientsHandler = (ingredient) => {
     fetch(
