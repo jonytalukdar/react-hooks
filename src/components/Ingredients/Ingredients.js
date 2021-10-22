@@ -1,131 +1,91 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
-import { useReducer } from 'react/cjs/react.development';
+import useHttp from '../../hooks/http';
 
-const ingredientReducer = (state, action) => {
+const ingredientReducer = (currentIngredients, action) => {
   switch (action.type) {
-    case 'SET': {
+    case 'SET':
       return action.ingredients;
-    }
-
-    case 'ADD': {
-      return [...state, action.ingredient];
-    }
-
-    case 'DELETE': {
-      return state.filter((ing) => ing.id !== action.id);
-    }
-
+    case 'ADD':
+      return [...currentIngredients, action.ingredient];
+    case 'DELETE':
+      return currentIngredients.filter((ing) => ing.id !== action.id);
     default:
-      throw new Error('Should not get there');
-  }
-};
-
-// reducer for httpRequest
-
-const httpReducer = (state, action) => {
-  switch (action.type) {
-    case 'SEND': {
-      return { isLoading: true, error: null };
-    }
-
-    case 'RESPONSE': {
-      return { ...state, isLoading: false };
-    }
-
-    case 'ERROR': {
-      return { ...state, error: action.errorMessage };
-    }
-
-    case 'CLEAR': {
-      return { isLoading: false, error: null };
-    }
-
-    default:
-      throw new Error('Should not get !');
+      throw new Error('Should not get there!');
   }
 };
 
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
-  const [httpState, dispatchHttp] = useReducer(httpReducer, {
-    isLoading: false,
-    error: null,
-  });
+  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifer, clear } =
+    useHttp();
 
-  console.log(userIngredients);
+  useEffect(() => {
+    if (!isLoading && !error && reqIdentifer === 'REMOVE_INGREDIENT') {
+      dispatch({ type: 'DELETE', id: reqExtra });
+    } else if (!isLoading && !error && reqIdentifer === 'ADD_INGREDIENT') {
+      dispatch({
+        type: 'ADD',
+        ingredient: { id: data.name, ...reqExtra },
+      });
+    }
+  }, [data, reqExtra, reqIdentifer, isLoading, error]);
 
   const filteredIngredientsHandler = useCallback((filteredIngredients) => {
     dispatch({ type: 'SET', ingredients: filteredIngredients });
   }, []);
 
-  const addIngredientHandler = (ingredient) => {
-    dispatchHttp({ type: 'SEND' });
-    fetch(
-      'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json',
-      {
-        method: 'POST',
-        body: JSON.stringify(ingredient),
-        headers: { 'Content-Type': 'application/json' },
-      }
-    )
-      .then((response) => {
-        dispatchHttp({ type: 'RESPONSE' });
-        return response.json();
-      })
-      .then((responseData) => {
-        dispatch({
-          type: 'ADD',
-          ingredient: { id: responseData.name, ...ingredient },
-        });
-      })
-      .catch((err) => {
-        dispatchHttp({ type: 'ERROR', errorMessage: 'Something went wrong!' });
-      });
-  };
+  const addIngredientHandler = useCallback(
+    (ingredient) => {
+      sendRequest(
+        'https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json',
+        'POST',
+        JSON.stringify(ingredient),
+        ingredient,
+        'ADD_INGREDIENT'
+      );
+    },
+    [sendRequest]
+  );
 
-  const removeIngredientHandler = (ingredientId) => {
-    dispatchHttp({ type: 'SEND' });
-    fetch(
-      `https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${ingredientId}.json`,
-      {
-        method: 'DELETE',
-      }
-    )
-      .then((response) => {
-        dispatchHttp({ type: 'RESPONSE' });
-        dispatch({ type: 'DELETE', id: ingredientId });
-      })
-      .catch((error) => {
-        dispatchHttp({ type: 'ERROR', errorMessage: 'Something went wrong!' });
-      });
-  };
+  const removeIngredientHandler = useCallback(
+    (ingredientId) => {
+      sendRequest(
+        `https://portfolio-5220b-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${ingredientId}.json`,
+        'DELETE',
+        null,
+        ingredientId,
+        'REMOVE_INGREDIENT'
+      );
+    },
+    [sendRequest]
+  );
 
-  const clearError = () => {
-    dispatchHttp({ type: 'CLEAR' });
-  };
+  const ingredientList = useMemo(() => {
+    return (
+      <IngredientList
+        ingredients={userIngredients}
+        onRemoveItem={removeIngredientHandler}
+      />
+    );
+  }, [userIngredients, removeIngredientHandler]);
 
   return (
     <div className="App">
-      {httpState.error && (
-        <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>
-      )}
+      {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
 
       <IngredientForm
         onAddIngredient={addIngredientHandler}
-        loading={httpState.isLoading}
+        loading={isLoading}
       />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
-        <IngredientList
-          ingredients={userIngredients}
-          onRemoveItem={removeIngredientHandler}
-        />
+        {ingredientList}
       </section>
     </div>
   );
